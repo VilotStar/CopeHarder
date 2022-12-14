@@ -1,7 +1,7 @@
 pub mod scan;
+pub mod surreal;
 
 use std::net::Ipv4Addr;
-use mcping::Response;
 
 trait IPHex {
     fn as_hex_number(&self) -> u32;

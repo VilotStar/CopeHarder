@@ -1,7 +1,9 @@
-use mcping::{get_status, Response};
-use std::time::Duration;
+use mcping::get_status;
+use std::fs::File;
+use std::{time::Duration, path::Path};
 use std:: net::Ipv4Addr;
-use rayon::{prelude::*, ThreadPoolBuilder};
+use std::io::Write;
+use rayon::prelude::*;
 use clap::{Parser, arg, command};
 
 use crate::IPHex;
@@ -18,7 +20,11 @@ pub struct Scan {
     #[arg(short, long, default_value_t = 50)]
     pub nWorker: u32,
     #[arg(short, long)]
-    pub addPorts: Option<Vec<u16>>
+    pub addPorts: Option<Vec<u16>>,
+    #[arg(short, long, default_value_t = true)]
+    pub fileOut: bool,
+    #[arg(short, long, default_value_t = ("out.log".to_string()))]//Path::from("out.log"))] clap cant handle File structs 
+    pub out: String
 }
 
 impl Scan {
@@ -39,14 +45,22 @@ impl Scan {
         let hex = self.startIp.as_hex_number() + job;
         let new_ip: Ipv4Addr = Ipv4Addr::from(hex); 
 
-        //let (latency, response) = get_status(&new_ip.to_string(), Duration::from_millis(5000));
-
         match get_status(&new_ip.to_string(), Duration::from_millis(5000)) {
             Ok((latency, response)) => {
-                println!("{}|{}: {} {:?} {:?}", job, new_ip.to_string(), latency, response.version.name, response.players.online);
+                let out_line = format!("{}|{}: {} {:?} {:?}", job, new_ip.to_string(), latency, response.version.name, response.players.online);
+                println!("{}", out_line);
+                if self.fileOut {
+                    if Path::new(&self.out).exists() {
+                        let mut output = File::open(&self.out).unwrap();
+                        writeln!(output, "{}", out_line);
+                    } else {
+                        let mut output = File::create(&self.out).unwrap();
+                        writeln!(output, "{}", out_line);
+                    }
+                }
             },
             Err(_) => {
-                //println!("{}|{}: No worky", job, new_ip.to_string());
+                println!("{}|{}: No worky", job, new_ip.to_string());
             },
         }
     }

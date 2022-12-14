@@ -1,9 +1,9 @@
 use CopeHarder::scan::Scan;
-use clap::{Parser, arg, command};
+use clap::{Parser};
 
 //use mcping::get_status;
 
 fn main() {
-    let mut cmd = Scan::parse();
+    let cmd = Scan::parse();
     cmd.scan();
 }
